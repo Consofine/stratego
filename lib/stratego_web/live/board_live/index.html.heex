@@ -1,0 +1,51 @@
+<h1>Listing Boards</h1>
+
+<%= if @live_action in [:new, :edit] do %>
+  <.modal return_to={Routes.board_index_path(@socket, :index)}>
+    <.live_component
+      module={StrategoWeb.BoardLive.FormComponent}
+      id={@board.id || :new}
+      title={@page_title}
+      action={@live_action}
+      board={@board}
+      return_to={Routes.board_index_path(@socket, :index)}
+    />
+  </.modal>
+<% end %>
+
+<table>
+  <thead>
+    <tr>
+      <th>Turn</th>
+      <th>Board</th>
+      <th>Number players</th>
+      <th>Winner</th>
+      <th>Graveyard</th>
+      <th>Eliminated players</th>
+      <th>Game code</th>
+
+      <th></th>
+    </tr>
+  </thead>
+  <tbody id="boards">
+    <%= for board <- @boards do %>
+      <tr id={"board-#{board.id}"}>
+        <td><%= board.turn %></td>
+        <td><%= board.board %></td>
+        <td><%= board.number_players %></td>
+        <td><%= board.winner %></td>
+        <td><%= board.graveyard %></td>
+        <td><%= board.eliminated_players %></td>
+        <td><%= board.game_code %></td>
+
+        <td>
+          <span><%= live_redirect "Show", to: Routes.board_show_path(@socket, :show, board) %></span>
+          <span><%= live_patch "Edit", to: Routes.board_index_path(@socket, :edit, board) %></span>
+          <span><%= link "Delete", to: "#", phx_click: "delete", phx_value_id: board.id, data: [confirm: "Are you sure?"] %></span>
+        </td>
+      </tr>
+    <% end %>
+  </tbody>
+</table>
+
+<span><%= live_patch "New Board", to: Routes.board_index_path(@socket, :new) %></span>

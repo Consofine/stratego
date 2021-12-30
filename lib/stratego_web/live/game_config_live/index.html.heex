@@ -1,0 +1,45 @@
+<h1>Listing Game configs</h1>
+
+<%= if @live_action in [:new, :edit] do %>
+  <.modal return_to={Routes.game_config_index_path(@socket, :index)}>
+    <.live_component
+      module={StrategoWeb.GameConfigLive.FormComponent}
+      id={@game_config.id || :new}
+      title={@page_title}
+      action={@live_action}
+      game_config={@game_config}
+      return_to={Routes.game_config_index_path(@socket, :index)}
+    />
+  </.modal>
+<% end %>
+
+<table>
+  <thead>
+    <tr>
+      <th>Attackandmove</th>
+      <th>Movetodefeated</th>
+      <th>Attackeradvantage</th>
+      <th>Defenderreveal</th>
+
+      <th></th>
+    </tr>
+  </thead>
+  <tbody id="game_configs">
+    <%= for game_config <- @game_configs do %>
+      <tr id={"game_config-#{game_config.id}"}>
+        <td><%= game_config.attackAndMove %></td>
+        <td><%= game_config.moveToDefeated %></td>
+        <td><%= game_config.attackerAdvantage %></td>
+        <td><%= game_config.defenderReveal %></td>
+
+        <td>
+          <span><%= live_redirect "Show", to: Routes.game_config_show_path(@socket, :show, game_config) %></span>
+          <span><%= live_patch "Edit", to: Routes.game_config_index_path(@socket, :edit, game_config) %></span>
+          <span><%= link "Delete", to: "#", phx_click: "delete", phx_value_id: game_config.id, data: [confirm: "Are you sure?"] %></span>
+        </td>
+      </tr>
+    <% end %>
+  </tbody>
+</table>
+
+<span><%= live_patch "New Game config", to: Routes.game_config_index_path(@socket, :new) %></span>

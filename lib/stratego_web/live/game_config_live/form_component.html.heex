@@ -1,0 +1,32 @@
+<div>
+  <h2><%= @title %></h2>
+
+  <.form
+    let={f}
+    for={@changeset}
+    id="game_config-form"
+    phx-target={@myself}
+    phx-change="validate"
+    phx-submit="save">
+  
+    <%= label f, :attackAndMove %>
+    <%= checkbox f, :attackAndMove %>
+    <%= error_tag f, :attackAndMove %>
+  
+    <%= label f, :moveToDefeated %>
+    <%= checkbox f, :moveToDefeated %>
+    <%= error_tag f, :moveToDefeated %>
+  
+    <%= label f, :attackerAdvantage %>
+    <%= checkbox f, :attackerAdvantage %>
+    <%= error_tag f, :attackerAdvantage %>
+  
+    <%= label f, :defenderReveal %>
+    <%= checkbox f, :defenderReveal %>
+    <%= error_tag f, :defenderReveal %>
+  
+    <div>
+      <%= submit "Save", phx_disable_with: "Saving..." %>
+    </div>
+  </.form>
+</div>
