@@ -3,9 +3,13 @@
     phx-click="lv:clear-flash"
     phx-value-key="info"><%= live_flash(@flash, :info) %></p>
 
-  <p class="alert alert-danger" role="alert"
+  <%= if live_flash(@flash, :error) do %>
+  <div class="w-screen bg-red-500 opacity-75 cursor-pointer text-center py-1" role="alert"
     phx-click="lv:clear-flash"
-    phx-value-key="error"><%= live_flash(@flash, :error) %></p>
+    phx-value-key="error">
+    <p class="text-white text-lg"><%= live_flash(@flash, :error) %></p>
+  </div>
+  <% end %>
 
   <%= @inner_content %>
 </main>

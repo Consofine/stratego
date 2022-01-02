@@ -10,6 +10,7 @@ defmodule Stratego.Game.Board do
     field :number_players, :integer
     field :turn, :integer
     field :winner, :integer
+    field :is_game_started, :boolean, default: false
     field :config, :id
 
     timestamps()
@@ -18,7 +19,26 @@ defmodule Stratego.Game.Board do
   @doc false
   def changeset(board, attrs) do
     board
-    |> cast(attrs, [:turn, :board, :number_players, :winner, :graveyard, :eliminated_players, :game_code])
-    |> validate_required([:turn, :board, :number_players, :winner, :graveyard, :eliminated_players, :game_code])
+    |> cast(attrs, [
+      :turn,
+      :board,
+      :number_players,
+      :winner,
+      :graveyard,
+      :eliminated_players,
+      :game_code,
+      :is_game_started,
+      :config
+    ])
+    |> validate_required([
+      :turn,
+      :board,
+      :number_players,
+      :winner,
+      :graveyard,
+      :eliminated_players,
+      :game_code,
+      :is_game_started
+    ])
   end
 end

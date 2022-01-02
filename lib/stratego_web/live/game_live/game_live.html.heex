@@ -1,0 +1,6 @@
+<p>Welcome to the game page!</p>
+<%= if !@board.is_game_started do %> 
+<p> There are currently <%= @board.number_players %> players in this lobby</p>
+<%= else %>
+<p> The game is on!</p>
+<% end %>

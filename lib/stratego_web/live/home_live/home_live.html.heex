@@ -1,0 +1,38 @@
+<div class="container mx-auto text-center pt-4">
+    <p class="text-lg pb-4">Play the classic board game online in 3- and 4-player formats!</p>    
+    <div class="grid grid-cols-2 w-fit mx-auto">
+        <div class="rounded-lg border border-gray-200 p-4 mx-2 w-fit shadow-md">
+            <h2 class="text-xl font-bold pb-2">New</h2>
+            <p class="pb-2">Create a new game for your friends to join.</p>
+            <.form let={f} for={@create_changeset} phx-submit="create_game" %>
+                <div class="pb-2 text-left">
+                    <%= label f, :username, class: "text-sm" %>
+                    <%= text_input f, :username, class: "px-1 py-1 border border-gray-300 rounded-md block mx-auto max-w-64 outline-none focus:border-2 focus:border-blue-500 w-full" %> 
+                    <%= error_tag f, :username %>
+                </div>
+                <div>
+                    <button type="submit" class="px-4 py-1 text-white font-semibold bg-green-500 hover:bg-green-600 rounded-md shadow-md">Start game</button>
+                </div>
+            </.form>
+        </div>
+        <div class="rounded-lg border border-gray-200 p-4 mx-2 w-fit shadow-md">
+            <h2 class="text-xl font-bold pb-2">Join</h2>
+            <p class="pb-2">Join an existing game to play with people who are already ready to go.</p> 
+            <.form let={join} for={@join_changeset} phx-submit="join_game" %>
+                <div class="pb-2 text-left">
+                    <%= label join, :username, class: "text-sm" %>
+                    <%= text_input join, :username, class: "px-1 py-1 border border-gray-300 rounded-md block mx-auto max-w-64 outline-none focus:border-2 focus:border-blue-500 w-full" %> 
+                    <%= error_tag join, :username %>
+                </div>
+                <div class="pb-2 text-left">
+                    <%= label join, :game_code, class: "text-sm" %>
+                    <%= text_input join, :game_code, class: "px-1 py-1 border border-gray-300 rounded-md block mx-auto max-w-64 outline-none focus:border-2 focus:border-blue-500 w-full" %> 
+                    <%= error_tag join, :game_code %>
+                </div>
+                <div>
+                    <button type="submit" class="px-4 py-1 text-white font-semibold bg-green-500 hover:bg-green-600 rounded-md shadow-md">Start game</button>
+                </div>
+            </.form>
+        </div>
+    </div>
+</div>

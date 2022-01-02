@@ -3,10 +3,10 @@ defmodule Stratego.Game.GameConfig do
   import Ecto.Changeset
 
   schema "game_configs" do
-    field :attackAndMove, :boolean, default: false
-    field :attackerAdvantage, :boolean, default: false
-    field :defenderReveal, :boolean, default: false
-    field :moveToDefeated, :boolean, default: false
+    field :attack_and_move, :boolean, default: false
+    field :attacker_advantage, :boolean, default: false
+    field :defender_reveal, :boolean, default: false
+    field :move_to_defeated, :boolean, default: false
 
     timestamps()
   end
@@ -14,7 +14,12 @@ defmodule Stratego.Game.GameConfig do
   @doc false
   def changeset(game_config, attrs) do
     game_config
-    |> cast(attrs, [:attackAndMove, :moveToDefeated, :attackerAdvantage, :defenderReveal])
-    |> validate_required([:attackAndMove, :moveToDefeated, :attackerAdvantage, :defenderReveal])
+    |> cast(attrs, [:attack_and_move, :move_to_defeated, :attacker_advantage, :defender_reveal])
+    |> validate_required([
+      :attack_and_move,
+      :move_to_defeated,
+      :attacker_advantage,
+      :defender_reveal
+    ])
   end
 end

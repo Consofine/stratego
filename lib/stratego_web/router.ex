@@ -18,7 +18,8 @@ defmodule StrategoWeb.Router do
     pipe_through :browser
 
     # get "/", PageController, :index
-    live "/", PlayerLive, :index
+    live "/", HomeLive, :index
+    live "/play/:game_code/:player_secret", GameLive, :index
   end
 
   # Other scopes may use custom stacks.
