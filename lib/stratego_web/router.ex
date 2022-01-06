@@ -19,6 +19,7 @@ defmodule StrategoWeb.Router do
 
     # get "/", PageController, :index
     live "/", HomeLive, :index
+
     live "/play/:game_code/:player_secret", GameLive, :index
   end
 

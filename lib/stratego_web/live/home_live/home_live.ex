@@ -11,6 +11,34 @@ defmodule StrategoWeb.HomeLive do
     {:ok, socket |> assign_join_changeset() |> assign_create_changeset()}
   end
 
+  defp generate_game_code(depth \\ 0) do
+    if depth >= 10 do
+      raise CustomErrors.NoIDsError
+    end
+
+    secret = hd(Ecto.UUID.generate() |> String.split("-"))
+
+    if Repo.get_by(Board, game_code: secret) do
+      generate_game_code(depth + 1)
+    else
+      secret
+    end
+  end
+
+  defp generate_player_secret(depth \\ 0) do
+    if depth >= 10 do
+      raise CustomErrors.NoIDsError
+    end
+
+    secret = hd(Ecto.UUID.generate() |> String.split("-"))
+
+    if Repo.get_by(Player, player_secret: secret) do
+      generate_player_secret(depth + 1)
+    else
+      secret
+    end
+  end
+
   defp get_player_changeset(username \\ "") do
     player = %Player{}
 
@@ -19,18 +47,19 @@ defmodule StrategoWeb.HomeLive do
       board: %{},
       color: :blue,
       player_number: 0,
-      player_secret: "1234",
       username: username
     })
   end
 
   defp get_board_changeset(config_id) do
+    code = generate_game_code()
+
     Ecto.Changeset.cast(
       %Board{},
       %{
         board: %{},
         eliminated_players: [],
-        game_code: "543210",
+        game_code: code,
         graveyard: [],
         number_players: 1,
         turn: 0,
@@ -64,6 +93,8 @@ defmodule StrategoWeb.HomeLive do
   end
 
   def handle_event("join_game", %{"join_changeset" => request}, socket) do
+    Logger.debug("Joining game")
+
     join_changeset =
       get_join_changeset(%{username: request["username"], game_code: request["game_code"]})
 
@@ -85,7 +116,15 @@ defmodule StrategoWeb.HomeLive do
         Ecto.Multi.new()
         |> Ecto.Multi.run(:player_struct, fn repo, %{} ->
           #  insert new player model
-          repo.insert(Ecto.Changeset.cast(player_changeset, %{board_id: board.id}, [:board_id]))
+          secret = generate_player_secret()
+          Logger.debug("Secret is #{secret}")
+
+          repo.insert(
+            Ecto.Changeset.cast(player_changeset, %{board_id: board.id, player_secret: secret}, [
+              :board_id,
+              :player_secret
+            ])
+          )
         end)
         |> Ecto.Multi.run(:board_struct, fn repo, %{} ->
           # increment number of players in game
@@ -101,8 +140,6 @@ defmodule StrategoWeb.HomeLive do
              )}
 
           {:error, _player_cs} ->
-            Logger.error("Small success!")
-
             {:noreply,
              put_flash(
                socket
@@ -132,35 +169,66 @@ defmodule StrategoWeb.HomeLive do
              :error,
              e.message
            )}
+
+        e in CustomErrors.NoIDsError ->
+          {:noreply,
+           put_flash(
+             socket
+             |> assign_join_changeset(join_changeset |> Map.put(:action, :validate))
+             |> assign_create_changeset(),
+             :error,
+             e.message
+           )}
       end
     end
   end
 
   def handle_event("create_game", %{"player" => player}, socket) do
+    Logger.debug("Creating game")
     player_changeset = get_player_changeset(player["username"])
 
     if player_changeset.valid? do
-      Ecto.Multi.new()
-      |> Ecto.Multi.insert(:config, get_config_changeset())
-      |> Ecto.Multi.run(:board, fn repo, %{config: config} ->
-        repo.insert(get_board_changeset(config.id))
-      end)
-      |> Ecto.Multi.run(:player, fn repo, %{board: board} ->
-        repo.insert(Ecto.Changeset.cast(player_changeset, %{board_id: board.id}, [:board_id]))
-      end)
-      |> Repo.transaction()
-      |> case do
-        {:ok, %{board: board, player: player}} ->
-          {:noreply,
-           push_redirect(socket, to: "/play/#{board.game_code}/#{player.player_secret}")}
+      try do
+        Ecto.Multi.new()
+        |> Ecto.Multi.insert(:config, get_config_changeset())
+        |> Ecto.Multi.run(:board, fn repo, %{config: config} ->
+          repo.insert(get_board_changeset(config.id))
+        end)
+        |> Ecto.Multi.run(:player, fn repo, %{board: board} ->
+          secret = generate_player_secret()
+          Logger.debug("Player secret is #{secret}")
 
-        _ ->
-          Logger.error("Something went wrong inserting game!")
+          repo.insert(
+            Ecto.Changeset.cast(player_changeset, %{board_id: board.id, player_secret: secret}, [
+              :board_id,
+              :player_secret
+            ])
+          )
+        end)
+        |> Repo.transaction()
+        |> case do
+          {:ok, %{board: board, player: player}} ->
+            {:noreply,
+             push_redirect(socket, to: "/play/#{board.game_code}/#{player.player_secret}")}
 
+          _ ->
+            Logger.error("Something went wrong inserting game!")
+
+            {:noreply,
+             socket
+             |> assign_create_changeset(player_changeset |> Map.put(:action, :validate))
+             |> assign_join_changeset()}
+        end
+      rescue
+        e in CustomErrors.NoIDsError ->
           {:noreply,
-           socket
-           |> assign_create_changeset(player_changeset |> Map.put(:action, :validate))
-           |> assign_join_changeset()}
+           put_flash(
+             socket
+             |> assign_create_changeset(player_changeset |> Map.put(:action, :validate))
+             |> assign_join_changeset(),
+             :error,
+             e.message
+           )}
       end
     else
       {:noreply,

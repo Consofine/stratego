@@ -1,6 +1,24 @@
-<p>Welcome to the game page!</p>
 <%= if !@board.is_game_started do %> 
-<p> There are currently <%= @board.number_players %> players in this lobby</p>
+
+    <p> There <%= if @board.number_players == 1, do: "is currently one player", else: "are currently #{@board.number_players} players" %> in this lobby</p>
+    <div class="container mx-auto">
+        <div class="rounded-lg ring-1 ring-blue-500 p-4">
+            <div class="text-center">
+                <h2 class="text-2xl tracking-wider font-semibold">Lobby</h2>
+            </div>
+            <div class="divide-y divide-gray-300">
+                <%= for player <- @players do %>
+                    <div class="py-1 px-2">
+                        <p class=""><%= player.username %></p>
+                    </div>
+                <% end %>
+            </div>
+        </div>
+    </div>
+    <div class="text-center my-8">
+        <button phx-click="leave_lobby" type="button" class="px-3 py-1 bg-red-500 hover:bg-red-700 text-white font-bold tracking-wide rounded-md">Leave lobby</button>
+    </div>
 <%= else %>
-<p> The game is on!</p>
+    <p> The game is on!</p>
 <% end %>
+

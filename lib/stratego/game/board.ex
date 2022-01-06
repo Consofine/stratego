@@ -36,9 +36,10 @@ defmodule Stratego.Game.Board do
       :number_players,
       :winner,
       :graveyard,
-      :eliminated_players,
       :game_code,
+      :eliminated_players,
       :is_game_started
     ])
+    |> validate_length(:game_code, min: 8, max: 8)
   end
 end

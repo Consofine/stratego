@@ -16,8 +16,9 @@ defmodule Stratego.Game.Player do
   @doc false
   def changeset(player, attrs) do
     player
-    |> cast(attrs, [:board, :player_number, :color, :player_secret, :username])
-    |> validate_required([:board, :player_number, :color, :player_secret, :username])
+    |> cast(attrs, [:board, :player_number, :color, :username])
+    |> validate_required([:board, :player_number, :color, :username])
     |> validate_length(:username, min: 2, max: 25)
+    |> validate_length(:player_secret, min: 8, max: 8)
   end
 end
