@@ -71,7 +71,7 @@ defmodule StrategoWeb.GameLive do
     try do
       player = Repo.get_by!(Player, player_secret: player_secret)
       board = Repo.get(Board, player.board_id)
-      Repo.update(change(board, number_players: board.number_players + 1))
+      Repo.update(change(board, number_players: board.number_players - 1))
 
       player
       |> Repo.delete()

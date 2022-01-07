@@ -8,6 +8,7 @@ defmodule Stratego.Game.Player do
     field :player_number, :integer
     field :player_secret, :string
     field :username, :string
+    field :is_host, :boolean, default: false
     field :board_id, :id
 
     timestamps()

@@ -199,10 +199,15 @@ defmodule StrategoWeb.HomeLive do
           Logger.debug("Player secret is #{secret}")
 
           repo.insert(
-            Ecto.Changeset.cast(player_changeset, %{board_id: board.id, player_secret: secret}, [
-              :board_id,
-              :player_secret
-            ])
+            Ecto.Changeset.cast(
+              player_changeset,
+              %{board_id: board.id, player_secret: secret, is_host: true},
+              [
+                :board_id,
+                :player_secret,
+                :is_host
+              ]
+            )
           )
         end)
         |> Repo.transaction()

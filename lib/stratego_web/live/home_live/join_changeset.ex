@@ -10,6 +10,6 @@ defmodule StrategoWeb.JoinChangeset do
     |> cast(attrs, Map.keys(@types))
     |> validate_required([:username, :game_code])
     |> validate_length(:username, min: 2, max: 25)
-    |> validate_length(:game_code, min: 6, max: 6)
+    |> validate_length(:game_code, min: 8, max: 8)
   end
 end

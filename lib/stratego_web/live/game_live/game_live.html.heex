@@ -1,5 +1,8 @@
-<%= if !@board.is_game_started do %> 
+<% min_number_players = 3 %>
+<% has_enough_players = @board.number_players >= min_number_players %>
+<% is_host = @current_player.is_host %>
 
+<%= if !@board.is_game_started do %> 
     <p> There <%= if @board.number_players == 1, do: "is currently one player", else: "are currently #{@board.number_players} players" %> in this lobby</p>
     <div class="container mx-auto">
         <div class="rounded-lg ring-1 ring-blue-500 p-4">
@@ -14,10 +17,21 @@
                 <% end %>
             </div>
         </div>
+        <%= if is_host do %>
+            <div class="text-center my-8">
+                <button phx-click="start_game" type="button" class={"px-3 py-1 text-white font-bold tracking-wide rounded-md #{ if has_enough_players, do: "bg-green-500 hover:bg-green-700", else: "bg-gray-300 opacity-75 cursor-default" }"}>Start game</button>
+                <%= if !has_enough_players do %>
+                    <small class="text-red-500 text-sm block">Waiting on <%= if min_number_players - @board.number_players == 1, do: "1 player", else: "#{min_number_players - @board.number_players} players" %></small>
+                <% end %>
+            </div>
+        <%= end %>
+        
     </div>
-    <div class="text-center my-8">
-        <button phx-click="leave_lobby" type="button" class="px-3 py-1 bg-red-500 hover:bg-red-700 text-white font-bold tracking-wide rounded-md">Leave lobby</button>
-    </div>
+    <%= if !is_host do %>
+        <div class="text-center my-8">
+            <button phx-click="leave_lobby" type="button" class="px-3 py-1 bg-red-500 hover:bg-red-700 text-white font-bold tracking-wide rounded-md">Leave lobby</button>
+        </div>
+    <%= end %>
 <%= else %>
     <p> The game is on!</p>
 <% end %>
