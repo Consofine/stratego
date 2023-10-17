@@ -1,0 +1,37 @@
+<div>
+  <p>Test</p>
+
+  <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+    <div class="p-4 rounded-md border border-gray-300/50 shadow-md shadow-gray-200">
+      <h2 class="text-center text-lg">Create game</h2>
+      <.form :let={f} for={@create_cs} action={~p(/create)}>
+        <.input field={f[:username]} label="Username" />
+        <button type="submit">Submit</button>
+      </.form>
+
+      <%!-- <.form for={@create_game_form} phx-change="validate-create-game" phx-submit="create-game">
+        <div class="py-2">
+          <.input type="text" field={@create_game_form[:username]} label="Username" />
+        </div>
+        <button>Create game</button>
+      </.form> --%>
+    </div>
+    <div class="p-4 rounded-md border border-gray-300/50 shadow-md shadow-gray-200">
+      <h2>Join game</h2>
+      <.form :let={join_form} for={@join_cs} action={~p(/join)}>
+        <.input field={join_form[:game_id]} label="Game ID" />
+        <.input field={join_form[:username]} label="Username" />
+        <button type="submit">Submit</button>
+      </.form>
+      <%!-- <.form for={@join_game_form} phx-change="validate-join-game" phx-submit="join-game">
+        <div class="py-2">
+          <.input type="text" field={@join_game_form[:game_id]} label="Game ID" />
+        </div>
+        <div class="py-2">
+          <.input type="text" field={@join_game_form[:username]} label="Username" />
+        </div>
+        <button>Join game</button>
+      </.form> --%>
+    </div>
+  </div>
+</div>

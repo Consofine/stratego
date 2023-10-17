@@ -1,0 +1,14 @@
+<div>
+  <div>
+    <h1 class="text-center text-3xl font-medium mt-4 py-2"><%= @error_header %></h1>
+    <p class="text-lg"><%= @error_message %></p>
+  </div>
+  <div class="text-center py-4">
+    <button
+      type="button"
+      class="px-3 py-2 rounded-md text-white font-medium transition-colors duration-300 bg-teal-400 hover:bg-teal-500 border border-teal-700 shadow-md"
+    >
+      <.link navigate={~p(/)}>Go back</.link>
+    </button>
+  </div>
+</div>

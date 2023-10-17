@@ -1,0 +1,21 @@
+@import "tailwindcss/base";
+@import "tailwindcss/components";
+@import "tailwindcss/utilities";
+
+/* This file is for your main application CSS */
+
+.filter-b {
+    filter: invert(46%) sepia(23%) saturate(6406%) hue-rotate(202deg) brightness(100%) contrast(94%);
+}
+
+.filter-g {
+    filter: invert(77%) sepia(1%) saturate(63%) hue-rotate(314deg) brightness(85%) contrast(87%);
+}
+
+.filter-r {
+    filter: invert(31%) sepia(67%) saturate(2345%) hue-rotate(340deg) brightness(101%) contrast(87%);
+}
+
+.filter-w {
+    filter: invert(46%) sepia(16%) saturate(592%) hue-rotate(176deg) brightness(92%) contrast(90%);
+}
