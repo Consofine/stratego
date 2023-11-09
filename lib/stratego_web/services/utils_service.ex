@@ -14,4 +14,13 @@ defmodule StrategoWeb.Services.UtilsService do
       _ -> {:error}
     end
   end
+
+  def stringify_board(board) do
+    "\n" <>
+      (board
+       |> Enum.map(fn row ->
+         row |> Enum.join(" ")
+       end)
+       |> Enum.join("\n"))
+  end
 end

@@ -46,6 +46,20 @@ defmodule StrategoWeb.Components.Cell.LobbyCell do
     """
   end
 
+  def lobby_cell(%{value: <<value::binary-size(1), "-", _color::binary>>} = assigns)
+      when value == "U" do
+    ~H"""
+    <div class="bg-green-500 h-full w-full p-[0.75rem]">
+      <div class="bg-green-500">
+        <img
+          src={"/images/#{@value |> String.split("-") |> hd()}.svg"}
+          class={"filter-#{@value |> String.split("-") |> tl()} p-1"}
+        />
+      </div>
+    </div>
+    """
+  end
+
   def lobby_cell(%{value: value} = assigns) when value == nil do
     ~H"""
     <div class="bg-green-500 h-full w-full p-2">

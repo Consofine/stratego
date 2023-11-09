@@ -1,4 +1,5 @@
 defmodule StrategoWeb.Services.GameService do
+  alias StrategoWeb.Services.PlayerService
   alias Stratego.Player
   alias Stratego.{Game, Repo, Constants}
   alias StrategoWeb.Services.{RandomService, BoardService}
@@ -91,12 +92,12 @@ defmodule StrategoWeb.Services.GameService do
     active_player.color == color
   end
 
-  def maybe_make_move(board, own_color, from_cell, to_cell) do
-    with true <- is_own_turn(board, own_color),
-         true <- BoardService.is_own_movable_piece(board, own_color, from_cell),
-         true <- BoardService.is_neighboring_piece(board, from_cell, to_cell),
-         true <- BoardService.is_enemy_or_empty(board, own_color, to_cell) do
-      {:ok, make_move!(board, from_cell, to_cell)}
+  def maybe_make_move(game, own_color, from_cell, to_cell) do
+    with true <- is_own_turn(game, own_color),
+         true <- BoardService.is_own_movable_piece(game.board, own_color, from_cell),
+         true <- BoardService.is_neighboring_piece(game.board, from_cell, to_cell),
+         true <- BoardService.is_enemy_or_empty(game.board, own_color, to_cell) do
+      {:ok, make_move!(game.board, from_cell, to_cell)}
     else
       _ -> {:error}
     end
@@ -109,7 +110,7 @@ defmodule StrategoWeb.Services.GameService do
       attacker == "8" && defender == "B" -> true
       defender == "F" -> true
       defender == "S" -> true
-      true -> String.to_integer(attacker) > String.to_integer(defender)
+      true -> String.to_integer(attacker) < String.to_integer(defender)
     end
   end
 
@@ -118,8 +119,8 @@ defmodule StrategoWeb.Services.GameService do
   end
 
   defp make_move!(board, {x, y} = from_cell, {a, b} = to_cell) do
-    attacker = BoardService.get_piece(board, {x, y})
-    defender = BoardService.get_piece(board, {a, b})
+    attacker = BoardService.get_piece_rank(board, {x, y})
+    defender = BoardService.get_piece_rank(board, {a, b})
 
     cond do
       is_equal_rank(attacker, defender) -> BoardService.draw_attack(board, from_cell, to_cell)
@@ -133,5 +134,15 @@ defmodule StrategoWeb.Services.GameService do
 
     Game.changeset(game, %{"active_player_id" => next_player.id, "board" => board})
     |> Repo.update!()
+  end
+
+  def clean_players(players) do
+    Enum.map(players, &PlayerService.clean_player(&1))
+  end
+
+  def clean_game(game, self) do
+    players = clean_players(game.players)
+    board = BoardService.clean_board(game.board, self.color)
+    Map.from_struct(game) |> Map.put(:board, board) |> Map.put(:players, players)
   end
 end

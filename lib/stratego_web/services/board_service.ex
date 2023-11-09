@@ -48,9 +48,32 @@ defmodule StrategoWeb.Services.BoardService do
     end
   end
 
-  def get_color_from_piece(board, x, y) do
-    piece = board |> Enum.at(y) |> Enum.at(x)
+  def atom_to_string_color(color) do
+    case color do
+      :red -> {:ok, "r"}
+      :blue -> {:ok, "b"}
+      :green -> {:ok, "g"}
+      :white -> {:ok, "w"}
+      _ -> {:error}
+    end
+  end
 
+  def atom_to_string_color!(color) do
+    case color do
+      :red -> "r"
+      :blue -> "b"
+      :green -> "g"
+      :white -> "w"
+    end
+  end
+
+  def get_color_from_piece(piece, _format \\ :atom)
+
+  def get_color_from_piece(nil, _format) do
+    {:error}
+  end
+
+  def get_color_from_piece(piece, :atom) do
     if String.contains?(piece, "-") do
       color = piece |> String.split("-") |> List.last()
       string_to_atom_color(color)
@@ -59,9 +82,24 @@ defmodule StrategoWeb.Services.BoardService do
     end
   end
 
+  def get_color_from_piece(piece, :string) do
+    if String.contains?(piece, "-") do
+      {:ok, piece |> String.split("-") |> List.last()}
+    else
+      {:error}
+    end
+  end
+
+  def get_color_from_cell(board, x, y) do
+    board
+    |> Enum.at(y)
+    |> Enum.at(x)
+    |> get_color_from_piece()
+  end
+
   @spec is_own_piece(any, any, {integer, integer}) :: boolean
   def is_own_piece(board, own_color, {x, y} = _cell) do
-    case get_color_from_piece(board, x, y) do
+    case get_color_from_cell(board, x, y) do
       {:ok, color} -> color == own_color
       {:error} -> false
     end
@@ -94,16 +132,20 @@ defmodule StrategoWeb.Services.BoardService do
     if get_piece(board, {x, y}) == nil do
       true
     else
-      case get_color_from_piece(board, x, y) do
-        {:ok, color} -> color == team_color
-        {:error} -> false
+      case get_color_from_cell(board, x, y) do
+        {:ok, color} ->
+          color != team_color
+
+        {:error} ->
+          false
       end
     end
   end
 
   def is_movable_piece(board, {x, y}) do
     # can't be bomb or flag
-    ["S", "1", "2", "3", "4", "5", "6", "7", "8", "9"] |> Enum.member?(get_piece(board, {x, y}))
+    ["S", "1", "2", "3", "4", "5", "6", "7", "8", "9"]
+    |> Enum.member?(get_piece_rank(board, {x, y}))
   end
 
   def is_own_movable_piece(board, own_color, {x, y}) do
@@ -132,6 +174,16 @@ defmodule StrategoWeb.Services.BoardService do
     board |> Enum.at(y) |> Enum.at(x)
   end
 
+  def get_piece_rank(board, {x, y}) do
+    piece = get_piece(board, {x, y})
+
+    cond do
+      piece == nil -> nil
+      String.contains?(piece, "-") -> String.split(piece, "-") |> hd()
+      true -> nil
+    end
+  end
+
   def swap!(board, {x, y}, {a, b}) do
     first_piece = get_piece(board, {x, y})
     second_piece = get_piece(board, {a, b})
@@ -143,6 +195,10 @@ defmodule StrategoWeb.Services.BoardService do
     x >= 4 && x <= 10 && y <= 2
   end
 
+  def is_p1_starting_square_two_player(_x, y) do
+    y < 4
+  end
+
   def get_p1_piece(x, y) do
     piece = Enum.at(@pieces_list_quad, y) |> Enum.at(x - 4)
     color = Enum.at(@colors, 0)
@@ -151,6 +207,10 @@ defmodule StrategoWeb.Services.BoardService do
 
   def is_p2_starting_square_four_player(x, y) do
     x >= 12 && y >= 4 && y <= 10
+  end
+
+  def is_p2_starting_square_two_player(_x, y) do
+    y >= 6
   end
 
   def get_p2_piece(x, y) do
@@ -266,5 +326,24 @@ defmodule StrategoWeb.Services.BoardService do
         end
       end)
     end)
+  end
+
+  def clean_board(board, self_color) do
+    clean =
+      board
+      |> Enum.map(fn row ->
+        row
+        |> Enum.map(fn piece ->
+          case get_color_from_piece(piece, :string) do
+            {:ok, color} ->
+              if color != atom_to_string_color!(self_color), do: "U-#{color}", else: piece
+
+            {:error} ->
+              piece
+          end
+        end)
+      end)
+
+    clean
   end
 end

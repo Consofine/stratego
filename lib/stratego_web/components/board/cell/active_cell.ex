@@ -1,5 +1,5 @@
 defmodule StrategoWeb.Components.Cell.ActiveCell do
-  use Phoenix.Component
+  use Phoenix.LiveComponent
 
   attr(:value, :string, required: true)
   attr(:x, :integer, required: false)
@@ -13,21 +13,21 @@ defmodule StrategoWeb.Components.Cell.ActiveCell do
     "w" => "filter-white"
   }
 
-  def active_cell(%{value: <<value::binary-size(1)>>} = assigns) when value === "X" do
+  def render(%{value: <<value::binary-size(1)>>} = assigns) when value === "X" do
     # Obstacle
     ~H"""
     <div class="bg-blue-500 h-full w-full" />
     """
   end
 
-  def active_cell(%{value: <<value::binary-size(1)>>} = assigns) when value === "x" do
+  def render(%{value: <<value::binary-size(1)>>} = assigns) when value === "x" do
     # Out of bounds
     ~H"""
     <div class="bg-black h-full w-full" />
     """
   end
 
-  def active_cell(%{value: <<value::binary-size(1), "-", _color::binary>>} = assigns)
+  def render(%{value: <<value::binary-size(1), "-", _color::binary>>} = assigns)
       when value == "B" or value == "F" do
     ~H"""
     <button type="button" phx-click="select-piece-active" phx-value-coords={"#{@x},#{@y}"}>
@@ -46,15 +46,41 @@ defmodule StrategoWeb.Components.Cell.ActiveCell do
     """
   end
 
-  def active_cell(%{value: value} = assigns) when value == nil do
+  def render(%{value: <<value::binary-size(1), "-", _color::binary>>} = assigns)
+      when value == "U" do
     ~H"""
-    <div class="bg-green-500 h-full w-full p-2">
-      <div class="bg-green-500" />
-    </div>
+    <button
+      type="button"
+      class="bg-green-500 h-full w-full p-[0.75rem]"
+      phx-click="select-piece-active"
+      phx-value-coords={"#{@x},#{@y}"}
+    >
+      <div class="bg-green-500">
+        <img
+          src={"/images/#{@value |> String.split("-") |> hd()}.svg"}
+          class={"filter-#{@value |> String.split("-") |> tl()} p-1"}
+        />
+      </div>
+    </button>
     """
   end
 
-  def active_cell(assigns) do
+  def render(%{value: value} = assigns) when value == nil do
+    ~H"""
+    <button
+      type="button"
+      class="w-full h-full hover:brightness-90"
+      phx-click="select-piece-active"
+      phx-value-coords={"#{@x},#{@y}"}
+    >
+      <div class="bg-green-500 h-full w-full p-2">
+        <div class="bg-green-500" />
+      </div>
+    </button>
+    """
+  end
+
+  def render(assigns) do
     ~H"""
     <button type="button" phx-click="select-piece-active" phx-value-coords={"#{@x},#{@y}"}>
       <div class={"bg-green-500 h-full w-full p-2 #{if {@x,@y} == @selected, do: "brightness-75", else: ""}"}>

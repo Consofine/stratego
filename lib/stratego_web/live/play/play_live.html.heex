@@ -1,5 +1,5 @@
 <h1>Game</h1>
-<%= if @game.status === :in_lobby do %>
+<%= if @clean_game.status === :in_lobby do %>
   <%= if Map.get(@self, :status) == :not_ready do %>
     <button
       type="button"
@@ -13,23 +13,30 @@
       <p class="text-white">Waiting for other players</p>
     </div>
   <% end %>
-<% else %>
-  <p>GAME IS READY</p>
 <% end %>
+<div class="flex flex-row justify-end px-4">
+  <StrategoWeb.Components.PlayerLegend.legend
+    players={@clean_game.players}
+    status={@clean_game.status}
+    active_player_id={@clean_game.active_player_id}
+  />
+</div>
 <div class="container mx-auto p-4">
   <div class="mx-auto w-fit">
-    <%= if length(@game.players) <= 2 do %>
-      <StrategoWeb.Components.DualBoard.dual_board
+    <%= if length(@clean_game.players) <= 2 do %>
+      <.live_component
+        module={StrategoWeb.Components.DualBoard}
+        id="board"
         self={@self}
         selected={@selected}
-        board={@game.board}
-        status={@game.status}
+        game={@clean_game}
+        status={@clean_game.status}
       />
     <% else %>
       <StrategoWeb.Components.QuadBoard.quad_board
         self={@self}
         selected={@selected}
-        board={@game.board}
+        board={@clean_game.board}
       />
     <% end %>
   </div>

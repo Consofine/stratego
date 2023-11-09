@@ -9,7 +9,6 @@ defmodule StrategoWeb.PlayLive do
 
   def mount(%{"uid" => uid}, %{"secret" => secret}, socket) do
     game = from(g in Game, where: g.uid == ^uid, select: g, preload: [:players]) |> Repo.one()
-
     Logger.debug("Game players: #{inspect(game.players)}")
 
     self =
@@ -36,10 +35,17 @@ defmodule StrategoWeb.PlayLive do
             Map.from_struct(player_struct)
           end)
 
+        StrategoWeb.Endpoint.subscribe("game/#{uid}")
+
+        StrategoWeb.Endpoint.broadcast_from(self(), "game/#{game.uid}", "player_joined", %{
+          game: game
+        })
+
         {:ok,
          socket
-         |> assign(:game, game)
          |> assign(:self, Map.from_struct(self))
+         |> assign(:game, game)
+         |> assign_game(game)
          |> assign(:players, players)
          |> assign(:selected, nil)}
     end
@@ -70,51 +76,50 @@ defmodule StrategoWeb.PlayLive do
       game =
         Game.changeset(game, %{status: :active, active_player_id: first_player.id})
         |> Repo.update!()
+        |> Repo.preload([:players])
 
-      {:noreply, socket |> assign(:self, Map.from_struct(player)) |> assign(:game, game)}
+      StrategoWeb.Endpoint.broadcast_from(self(), "game/#{game.uid}", "readied_up", %{
+        game: game
+      })
+
+      {:noreply, socket |> assign(:self, Map.from_struct(player)) |> assign_game(game)}
     else
-      {:noreply, socket |> assign(:self, Map.from_struct(player))}
+      StrategoWeb.Endpoint.broadcast_from(self(), "game/#{game.uid}", "readied_up", %{
+        game: game
+      })
+
+      {:noreply, socket |> assign(:self, Map.from_struct(player)) |> assign_game(game)}
     end
   end
 
-  @doc """
-  Select piece when game is in lobby and there's already a piece selected.
-  Given valid arguments, this will swap the user's pieces.
-  """
   def handle_event(
         "select-piece-lobby",
         %{"coords" => coords} = _params,
         %{assigns: %{selected: selected, game: game, self: self}} = socket
       )
       when game.status == :in_lobby and not is_nil(selected) do
-    Logger.critical("Self id: #{Map.get(self, :id)}")
     own_color = Map.get(self, :color)
 
-    with {:ok, {x, y}} <- UtilsService.parse_coordinates_string(coords) do
-      case maybe_swap_pieces(game.board, own_color, selected, {x, y}) do
-        {:ok, board} ->
-          game = Game.changeset(game, %{board: board}) |> Repo.update!()
-          {:noreply, socket |> assign(:game, game) |> assign(:selected, nil)}
+    with {:ok, {x, y}} <- UtilsService.parse_coordinates_string(coords),
+         {:ok, board} <- maybe_swap_pieces(game.board, own_color, selected, {x, y}) do
+      game = Game.changeset(game, %{board: board}) |> Repo.update!()
 
-        {:error} ->
-          {:noreply, socket |> assign(:selected, nil)}
-      end
+      StrategoWeb.Endpoint.broadcast_from(self(), "game/#{game.uid}", "made_move", %{
+        game: game
+      })
+
+      {:noreply, socket |> assign_game(game) |> assign(:selected, nil)}
     else
       _ -> {:noreply, socket |> assign(:selected, nil)}
     end
   end
 
-  @doc """
-  Select piece when game is in lobby and there's no selected piece yet.
-  Given valid arguments, this will update state to show that this cell is "selected"
-  """
   def handle_event(
         "select-piece-lobby",
         %{"coords" => coords},
         %{assigns: %{selected: selected, game: game, self: self}} = socket
       )
       when game.status == :in_lobby and is_nil(selected) do
-    Logger.critical("Self id: #{Map.get(self, :id)}")
     own_color = Map.get(self, :color)
 
     with {:ok, {x, y}} <- UtilsService.parse_coordinates_string(coords) do
@@ -127,27 +132,24 @@ defmodule StrategoWeb.PlayLive do
     end
   end
 
-  @doc """
-  Select piece when game is active and there's a currently selected piece.
-  Attempts to make move, given valid arguments, and updates board state if successful.
-  """
   def handle_event(
         "select-piece-active",
         %{"coords" => coords} = _params,
         %{assigns: %{selected: selected, game: game, self: self}} = socket
       )
       when game.status == :active and not is_nil(selected) do
-    Logger.critical("Self id: #{Map.get(self, :id)}")
     own_color = Map.get(self, :color)
 
     with {:ok, {x, y}} <- UtilsService.parse_coordinates_string(coords) do
-      Logger.debug("NOT IN LOBBY")
-      Logger.critical("SELECTED")
-
-      case GameService.maybe_make_move(game.board, own_color, selected, {x, y}) do
+      case GameService.maybe_make_move(game, own_color, selected, {x, y}) do
         {:ok, board} ->
           game = GameService.end_turn(game, board)
-          {:noreply, socket |> assign(:game, game) |> assign(:selected, nil)}
+
+          StrategoWeb.Endpoint.broadcast_from(self(), "game/#{game.uid}", "made_move", %{
+            game: game
+          })
+
+          {:noreply, socket |> assign_game(game) |> assign(:selected, nil)}
 
         {:error} ->
           {:noreply, socket |> assign(:selected, nil)}
@@ -157,18 +159,12 @@ defmodule StrategoWeb.PlayLive do
     end
   end
 
-  @doc """
-  Select piece when game is active and selected is nil.
-  Updates state to show that the given cell is selected, assuming
-  valid arguments.
-  """
   def handle_event(
         "select-piece-active",
         %{"coords" => coords},
         %{assigns: %{selected: selected, game: game, self: self}} = socket
       )
       when game.status == :active and is_nil(selected) do
-    Logger.critical("NOT SELECTED")
     own_color = Map.get(self, :color)
 
     with {:ok, {x, y}} <- UtilsService.parse_coordinates_string(coords) do
@@ -179,6 +175,14 @@ defmodule StrategoWeb.PlayLive do
     else
       _ -> {:noreply, socket |> assign(:selected, nil)}
     end
+  end
+
+  def handle_info(%{payload: %{game: game}}, socket) do
+    {:noreply, socket |> assign_game(game)}
+  end
+
+  def handle_info(%{event: "player_joined", payload: %{game: game}}, socket) do
+    {:noreply, socket |> assign_game(game)}
   end
 
   def is_own_piece(board, own_color, x, y) do
@@ -210,5 +214,9 @@ defmodule StrategoWeb.PlayLive do
     else
       {:error}
     end
+  end
+
+  def assign_game(%{assigns: %{self: self}} = socket, game) do
+    socket |> assign(:clean_game, GameService.clean_game(game, self)) |> assign(:game, game)
   end
 end

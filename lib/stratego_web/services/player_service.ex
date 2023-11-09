@@ -18,4 +18,9 @@ defmodule StrategoWeb.Services.PlayerService do
      player
      |> Repo.insert!()}
   end
+
+  def clean_player(player) do
+    Map.from_struct(player)
+    |> Map.take([:username, :color, :status, :index, :id])
+  end
 end
