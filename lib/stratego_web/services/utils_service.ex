@@ -15,11 +15,23 @@ defmodule StrategoWeb.Services.UtilsService do
     end
   end
 
+  def coords_to_string({x, y}) do
+    "#{x},#{y}"
+  end
+
+  defp get_string_for_piece(piece) do
+    cond do
+      piece == nil -> "   "
+      String.length(piece) == 1 -> " #{piece} "
+      true -> piece
+    end
+  end
+
   def stringify_board(board) do
     "\n" <>
       (board
        |> Enum.map(fn row ->
-         row |> Enum.join(" ")
+         row |> Enum.map(&get_string_for_piece(&1)) |> Enum.join(" ")
        end)
        |> Enum.join("\n"))
   end

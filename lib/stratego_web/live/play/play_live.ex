@@ -9,15 +9,12 @@ defmodule StrategoWeb.PlayLive do
 
   def mount(%{"uid" => uid}, %{"secret" => secret}, socket) do
     game = from(g in Game, where: g.uid == ^uid, select: g, preload: [:players]) |> Repo.one()
-    Logger.debug("Game players: #{inspect(game.players)}")
 
     self =
       game.players
       |> Enum.find(fn player ->
         player.secret == secret
       end)
-
-    Logger.debug("Current player: #{inspect(self)}")
 
     cond do
       game == nil ->
@@ -142,8 +139,8 @@ defmodule StrategoWeb.PlayLive do
 
     with {:ok, {x, y}} <- UtilsService.parse_coordinates_string(coords) do
       case GameService.maybe_make_move(game, own_color, selected, {x, y}) do
-        {:ok, board} ->
-          game = GameService.end_turn(game, board)
+        {:ok, new_board, visible_pieces} ->
+          game = GameService.end_turn(game, new_board, visible_pieces)
 
           StrategoWeb.Endpoint.broadcast_from(self(), "game/#{game.uid}", "made_move", %{
             game: game
@@ -155,7 +152,8 @@ defmodule StrategoWeb.PlayLive do
           {:noreply, socket |> assign(:selected, nil)}
       end
     else
-      _ -> {:noreply, socket}
+      _ ->
+        {:noreply, socket}
     end
   end
 
@@ -217,6 +215,8 @@ defmodule StrategoWeb.PlayLive do
   end
 
   def assign_game(%{assigns: %{self: self}} = socket, game) do
-    socket |> assign(:clean_game, GameService.clean_game(game, self)) |> assign(:game, game)
+    socket
+    |> assign(:clean_game, GameService.clean_game(game, self))
+    |> assign(:game, game)
   end
 end

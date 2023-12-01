@@ -1,5 +1,6 @@
 defmodule StrategoWeb.Components.QuadBoard do
   use Phoenix.Component
+  alias StrategoWeb.Components.Cell.{LobbyCell, ActiveCell}
 
   attr :board, :map, required: true
   attr :selected, :any, required: true
@@ -15,7 +16,8 @@ defmodule StrategoWeb.Components.QuadBoard do
               style={"transform: rotate(-#{180 - (@self.index * 90)}deg)"}
               class="w-12 h-12 flex-0 justify-center items-center relative border border-gray-500 z-10 hover:brightness-90"
             >
-              <StrategoWeb.Components.Cell.cell value={cell} x={x} y={y} selected={@selected} />
+              <%!-- <StrategoWeb.Components.Cell.cell value={cell} x={x} y={y} selected={@selected} /> --%>
+              <LobbyCell.lobby_cell value={cell} x={x} y={y} selected={@selected} />
             </div>
           <% end %>
         </div>

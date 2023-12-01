@@ -1,10 +1,10 @@
 defmodule StrategoWeb.Services.GameService do
+  alias StrategoWeb.Services.UtilsService
   alias StrategoWeb.Services.PlayerService
   alias Stratego.Player
   alias Stratego.{Game, Repo, Constants}
   alias StrategoWeb.Services.{RandomService, BoardService}
   import Ecto.Query
-  require Logger
 
   @db_colors Constants.db_colors()
 
@@ -28,12 +28,9 @@ defmodule StrategoWeb.Services.GameService do
 
     case game do
       nil ->
-        Logger.critical("No game!")
         {:error, "Game not found. Check the game code and try again."}
 
       _ ->
-        Logger.critical(inspect(game))
-
         player_number = length(game.players) + 1
 
         if player_number > Constants.max_players() do
@@ -97,20 +94,36 @@ defmodule StrategoWeb.Services.GameService do
          true <- BoardService.is_own_movable_piece(game.board, own_color, from_cell),
          true <- BoardService.is_neighboring_piece(game.board, from_cell, to_cell),
          true <- BoardService.is_enemy_or_empty(game.board, own_color, to_cell) do
-      {:ok, make_move!(game.board, from_cell, to_cell)}
+      {new_board, visible_pieces} = make_move!(game.board, from_cell, to_cell)
+      {:ok, new_board, visible_pieces}
     else
-      _ -> {:error}
+      _ ->
+        {:error}
     end
   end
 
   def is_stronger_than(attacker, defender) do
     cond do
-      defender == nil -> true
-      attacker == "S" && defender == "1" -> true
-      attacker == "8" && defender == "B" -> true
-      defender == "F" -> true
-      defender == "S" -> true
-      true -> String.to_integer(attacker) < String.to_integer(defender)
+      defender == nil ->
+        true
+
+      attacker == "S" && defender == "1" ->
+        true
+
+      attacker == "8" && defender == "B" ->
+        true
+
+      defender == "F" ->
+        true
+
+      defender == "S" ->
+        true
+
+      defender == "B" ->
+        false
+
+      true ->
+        String.to_integer(attacker) < String.to_integer(defender)
     end
   end
 
@@ -118,21 +131,52 @@ defmodule StrategoWeb.Services.GameService do
     attacker == defender
   end
 
-  defp make_move!(board, {x, y} = from_cell, {a, b} = to_cell) do
-    attacker = BoardService.get_piece_rank(board, {x, y})
-    defender = BoardService.get_piece_rank(board, {a, b})
-
-    cond do
-      is_equal_rank(attacker, defender) -> BoardService.draw_attack(board, from_cell, to_cell)
-      is_stronger_than(attacker, defender) -> BoardService.win_attack(board, from_cell, to_cell)
-      true -> BoardService.lose_attack(board, from_cell, to_cell)
+  defp get_visible_pieces(_from_cell, to_cell, attacker, defender, :win) do
+    if is_nil(defender) do
+      []
+    else
+      [
+        [UtilsService.coords_to_string(to_cell), defender],
+        [UtilsService.coords_to_string(to_cell), attacker]
+      ]
     end
   end
 
-  def end_turn(game, board) do
+  defp get_visible_pieces(from_cell, to_cell, attacker, defender, action)
+       when action == :draw or action == :loss do
+    [
+      [UtilsService.coords_to_string(from_cell), attacker],
+      [UtilsService.coords_to_string(to_cell), defender]
+    ]
+  end
+
+  def make_move!(board, from_cell, to_cell) do
+    {attacker, attacker_rank} = BoardService.get_piece_and_rank(board, from_cell)
+    {defender, defender_rank} = BoardService.get_piece_and_rank(board, to_cell)
+
+    cond do
+      is_equal_rank(attacker_rank, defender_rank) ->
+        {BoardService.draw_attack(board, from_cell, to_cell),
+         get_visible_pieces(from_cell, to_cell, attacker, defender, :draw)}
+
+      is_stronger_than(attacker_rank, defender_rank) ->
+        {BoardService.win_attack(board, from_cell, to_cell),
+         get_visible_pieces(from_cell, to_cell, attacker, defender, :win)}
+
+      true ->
+        {BoardService.lose_attack(board, from_cell, to_cell),
+         get_visible_pieces(from_cell, to_cell, attacker, defender, :loss)}
+    end
+  end
+
+  def end_turn(game, board, visible_pieces \\ %{}) do
     next_player = get_next_player(game)
 
-    Game.changeset(game, %{"active_player_id" => next_player.id, "board" => board})
+    Game.changeset(game, %{
+      "active_player_id" => next_player.id,
+      "board" => board,
+      "visible_pieces" => visible_pieces
+    })
     |> Repo.update!()
   end
 

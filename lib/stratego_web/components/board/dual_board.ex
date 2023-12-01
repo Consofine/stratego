@@ -3,7 +3,7 @@ defmodule StrategoWeb.Components.DualBoard do
 
   require Logger
 
-  alias StrategoWeb.Services.BoardService
+  alias StrategoWeb.Services.{UtilsService, BoardService}
   alias StrategoWeb.Components.Cell.{LobbyCell, ActiveCell}
 
   def is_starting_square(self, {x, y}) do
@@ -11,6 +11,16 @@ defmodule StrategoWeb.Components.DualBoard do
       0 -> BoardService.is_p1_starting_square_two_player(x, y)
       1 -> BoardService.is_p2_starting_square_two_player(x, y)
     end
+  end
+
+  def get_vp_list(visible_pieces, cell) do
+    visible_pieces
+    |> Enum.filter(fn [coords, _piece] ->
+      UtilsService.coords_to_string(cell) == coords
+    end)
+    |> Enum.map(fn [_coords, piece] ->
+      piece
+    end)
   end
 
   def render(%{game: game} = assigns) when game.status == :in_lobby do
@@ -52,6 +62,7 @@ defmodule StrategoWeb.Components.DualBoard do
                   x={x}
                   y={y}
                   selected={@selected}
+                  vp_list={get_vp_list(@game.visible_pieces, {x, y})}
                 />
               </div>
             <% end %>

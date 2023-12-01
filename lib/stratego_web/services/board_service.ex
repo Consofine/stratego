@@ -24,7 +24,7 @@ defmodule StrategoWeb.Services.BoardService do
 
   def set_up() do
     board = create_board()
-    {:ok, board |> add_starting_pieces(0)}
+    {:ok, add_starting_pieces(board, 0)}
   end
 
   def create_board() do
@@ -88,6 +88,10 @@ defmodule StrategoWeb.Services.BoardService do
     else
       {:error}
     end
+  end
+
+  def get_color_from_piece!(piece, :string) do
+    piece |> String.split("-") |> List.last()
   end
 
   def get_color_from_cell(board, x, y) do
@@ -170,18 +174,25 @@ defmodule StrategoWeb.Services.BoardService do
     board |> List.replace_at(y, List.replace_at(row, x, piece))
   end
 
-  def get_piece(board, {x, y}) do
-    board |> Enum.at(y) |> Enum.at(x)
-  end
-
-  def get_piece_rank(board, {x, y}) do
-    piece = get_piece(board, {x, y})
-
+  def get_rank_from_piece(piece) do
     cond do
       piece == nil -> nil
       String.contains?(piece, "-") -> String.split(piece, "-") |> hd()
       true -> nil
     end
+  end
+
+  def get_piece(board, {x, y}) do
+    board |> Enum.at(y) |> Enum.at(x)
+  end
+
+  def get_piece_rank(board, {x, y}) do
+    get_piece(board, {x, y}) |> get_rank_from_piece()
+  end
+
+  def get_piece_and_rank(board, cell) do
+    piece = get_piece(board, cell)
+    {piece, get_rank_from_piece(piece)}
   end
 
   def swap!(board, {x, y}, {a, b}) do
@@ -316,8 +327,7 @@ defmodule StrategoWeb.Services.BoardService do
   end
 
   def add_starting_pieces(board, player_number) when player_number == 3 do
-    board
-    |> Enum.with_index(fn row, y ->
+    Enum.with_index(board, fn row, y ->
       Enum.with_index(row, fn cell, x ->
         if is_p4_starting_square_four_player(x, y) do
           get_p4_piece(x, y)
@@ -330,8 +340,7 @@ defmodule StrategoWeb.Services.BoardService do
 
   def clean_board(board, self_color) do
     clean =
-      board
-      |> Enum.map(fn row ->
+      Enum.map(board, fn row ->
         row
         |> Enum.map(fn piece ->
           case get_color_from_piece(piece, :string) do
