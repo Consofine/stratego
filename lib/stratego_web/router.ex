@@ -14,15 +14,27 @@ defmodule StrategoWeb.Router do
     plug(:accepts, ["json"])
   end
 
+  pipeline :rate_limited do
+    plug(StrategoWeb.Plugs.AuthRateLimit, interval_seconds: 10, max_requests: 3)
+  end
+
+  # pipeline :rate_limited do
+  #   plug(StrategoWeb.Plugs.RateLimit, interval_seconds: 10, max_requests: 3)
+  # end
+
   scope "/", StrategoWeb do
     pipe_through(:browser)
-
-    # live("/", HomeLive)
     get("/", HomeController, :home)
-    post("/create", HomeController, :create)
-    post("/join", HomeController, :join)
+    get("/create", HomeController, :create)
+    get("/join", HomeController, :join)
     live("/play/:uid", PlayLive)
     live("/error", ErrorLive)
+  end
+
+  scope "/", StrategoWeb do
+    pipe_through([:browser, :rate_limited])
+    post("/create", HomeController, :create_game)
+    post("/join", HomeController, :join_game)
   end
 
   # Other scopes may use custom stacks.

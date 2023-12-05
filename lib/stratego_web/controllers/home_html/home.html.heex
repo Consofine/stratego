@@ -1,37 +1,24 @@
-<div>
-  <p>Test</p>
-
-  <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-    <div class="p-4 rounded-md border border-gray-300/50 shadow-md shadow-gray-200">
-      <h2 class="text-center text-lg">Create game</h2>
-      <.form :let={f} for={@create_cs} action={~p(/create)}>
-        <.input field={f[:username]} label="Username" />
-        <button type="submit">Submit</button>
-      </.form>
-
-      <%!-- <.form for={@create_game_form} phx-change="validate-create-game" phx-submit="create-game">
-        <div class="py-2">
-          <.input type="text" field={@create_game_form[:username]} label="Username" />
-        </div>
-        <button>Create game</button>
-      </.form> --%>
+<div class="bg-slate-800 min-h-screen font-serif">
+  <h1 class="text-5xl text-gray-100 text-center pt-4">Stratego</h1>
+  <p class="text-gray-200 text-center pt-2">
+    Play the classic board game in an updated online version!
+  </p>
+  <div class="flex flex-row-reverse items-center justify-center space-x-8 mt-8">
+    <div>
+      <img src="/images/1.svg" class="filter-r max-w-xs mx-auto mt-4" />
     </div>
-    <div class="p-4 rounded-md border border-gray-300/50 shadow-md shadow-gray-200">
-      <h2>Join game</h2>
-      <.form :let={join_form} for={@join_cs} action={~p(/join)}>
-        <.input field={join_form[:game_id]} label="Game ID" />
-        <.input field={join_form[:username]} label="Username" />
-        <button type="submit">Submit</button>
-      </.form>
-      <%!-- <.form for={@join_game_form} phx-change="validate-join-game" phx-submit="join-game">
-        <div class="py-2">
-          <.input type="text" field={@join_game_form[:game_id]} label="Game ID" />
-        </div>
-        <div class="py-2">
-          <.input type="text" field={@join_game_form[:username]} label="Username" />
-        </div>
-        <button>Join game</button>
-      </.form> --%>
+
+    <div class="flex flex-row items-center space-x-6">
+      <.link navigate={~p(/join)}>
+        <button class="px-3 py-2 rounded-md bg-white text-slate-800 hover:brightness-75">
+          Join Game
+        </button>
+      </.link>
+      <.link navigate={~p(/create)}>
+        <button class="px-3 py-2 rounded-md bg-white text-slate-800 hover:brightness-75">
+          Create Game
+        </button>
+      </.link>
     </div>
   </div>
 </div>

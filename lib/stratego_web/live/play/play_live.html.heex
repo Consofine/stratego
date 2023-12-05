@@ -1,49 +1,49 @@
-<h1>Game</h1>
-
-<div class="md:flex md:flex-row-reverse justify-center container mx-auto">
-  <div class="h-fit flex flex-row flex-1 justify-center space-x-2 py-2 md:py-0 md:block">
-    <StrategoWeb.Components.PlayerLegend.legend
-      players={@clean_game.players}
-      status={@clean_game.status}
-      active_player_id={@clean_game.active_player_id}
-    />
-    <%= if @clean_game.status === :in_lobby do %>
-      <div class="mt-4 p-4 flex flex-col items-center">
-        <%= if Map.get(@self, :status) == :not_ready do %>
-          <h3 class="text-center text-xl font-serif">Not ready</h3>
-          <button
-            type="button"
-            phx-click="ready-up"
-            class="rounded-md px-3 py-2 text-white font-bold bg-green-500 hover:bg-green-700 mt-3"
-          >
-            Ready up
-          </button>
+<div class="bg-slate-800 min-h-screen w-screen py-2">
+  <div class="md:flex md:flex-row-reverse justify-center container mx-auto">
+    <div class="h-fit flex flex-row flex-1 justify-center space-x-2 py-2 md:py-0 md:block">
+      <StrategoWeb.Components.PlayerLegend.legend
+        players={@clean_game.players}
+        status={@clean_game.status}
+        active_player_id={@clean_game.active_player_id}
+      />
+      <%= if @clean_game.status === :in_lobby do %>
+        <div class="mt-4 p-4 flex flex-col items-center">
+          <%= if Map.get(@self, :status) == :not_ready do %>
+            <h3 class="text-center text-xl font-serif text-white">Not ready</h3>
+            <button
+              type="button"
+              phx-click="ready-up"
+              class="rounded-md px-3 py-2 text-white font-bold bg-green-500 hover:bg-green-700 mt-3"
+            >
+              Ready up
+            </button>
+          <% else %>
+            <h3 class="text-center text-xl font-serif text-white">Ready</h3>
+            <div class="mx-auto p-2 max-w-xs bg-teal-500 text-center rounded-md m-2">
+              <p class="text-white">Waiting for other players</p>
+            </div>
+          <% end %>
+        </div>
+      <% end %>
+    </div>
+    <div class="container mx-auto px-4">
+      <div class="mx-auto w-fit">
+        <%= if length(@clean_game.players) <= 2 do %>
+          <.live_component
+            module={StrategoWeb.Components.DualBoard}
+            id="board"
+            self={@self}
+            selected={@selected}
+            game={@clean_game}
+          />
         <% else %>
-          <h3 class="text-center text-xl font-serif">Ready</h3>
-          <div class="mx-auto p-2 max-w-xs bg-teal-500 text-center rounded-md m-2">
-            <p class="text-white">Waiting for other players</p>
-          </div>
+          <StrategoWeb.Components.QuadBoard.quad_board
+            self={@self}
+            selected={@selected}
+            board={@clean_game.board}
+          />
         <% end %>
       </div>
-    <% end %>
-  </div>
-  <div class="container mx-auto px-4">
-    <div class="mx-auto w-fit">
-      <%= if length(@clean_game.players) <= 2 do %>
-        <.live_component
-          module={StrategoWeb.Components.DualBoard}
-          id="board"
-          self={@self}
-          selected={@selected}
-          game={@clean_game}
-        />
-      <% else %>
-        <StrategoWeb.Components.QuadBoard.quad_board
-          self={@self}
-          selected={@selected}
-          board={@clean_game.board}
-        />
-      <% end %>
     </div>
   </div>
 </div>

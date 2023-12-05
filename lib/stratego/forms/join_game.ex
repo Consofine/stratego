@@ -12,6 +12,6 @@ defmodule Stratego.Forms.JoinGame do
     data
     |> Ecto.Changeset.cast(params, [:game_id, :username])
     |> validate_required([:game_id, :username], message: "Required")
-    |> validate_length(:game_id, is: 6, message: "Game ID should be 6 characters or more")
+    |> validate_length(:game_id, is: 6, message: "Game ID should be 6 characters")
   end
 end

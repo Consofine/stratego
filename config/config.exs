@@ -58,6 +58,13 @@ config :logger, :console,
   handle_otp_reports: true,
   handle_sasl_reports: true
 
+config :ex_rated,
+  timeout: 10_000,
+  cleanup_rate: 10_000,
+  persistent: false,
+  name: :ex_rated,
+  ets_table_name: :ets_rated_test_buckets
+
 # Use Jason for JSON parsing in Phoenix
 config :phoenix, :json_library, Jason
 

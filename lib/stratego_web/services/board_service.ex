@@ -1,5 +1,7 @@
 defmodule StrategoWeb.Services.BoardService do
+  alias StrategoWeb.Services.UtilsService
   alias Stratego.Constants
+  alias UtilsService
 
   require Logger
 
@@ -101,12 +103,22 @@ defmodule StrategoWeb.Services.BoardService do
     |> get_color_from_piece()
   end
 
-  @spec is_own_piece(any, any, {integer, integer}) :: boolean
-  def is_own_piece(board, own_color, {x, y} = _cell) do
+  def is_own_piece(board, player_color, {x, y} = _cell) do
     case get_color_from_cell(board, x, y) do
-      {:ok, color} -> color == own_color
+      {:ok, color} -> color == player_color
       {:error} -> false
     end
+  end
+
+  def is_own_piece(piece, player_color) do
+    case get_color_from_piece(piece) do
+      {:ok, color} -> color == player_color
+      {:error} -> false
+    end
+  end
+
+  def is_own_specific_piece(piece, player_color, rank) do
+    is_own_piece(piece, player_color) && get_rank_from_piece(piece) == rank
   end
 
   def is_two_player_board(board) do
@@ -124,6 +136,30 @@ defmodule StrategoWeb.Services.BoardService do
       is_within_board(board, x, y) && !is_out_of_bounds_four_player(x, y) &&
         !is_obstacle_four_player(x, y)
     end
+  end
+
+  def index_board(board) do
+    board
+    |> Enum.with_index(fn row, y ->
+      {Enum.with_index(row), y}
+    end)
+  end
+
+  def get_losers_visible_pieces(board, losers) do
+    colors = losers |> Enum.map(fn player -> player.color end)
+
+    index_board(board)
+    |> Enum.reduce([], fn {row, y}, acc ->
+      acc ++
+        Enum.reduce(row, [], fn {piece, x}, row_acc ->
+          with {:ok, color} <- get_color_from_piece(piece),
+               true <- color in colors do
+            row_acc ++ [[UtilsService.coords_to_string({x, y}), piece]]
+          else
+            _ -> row_acc
+          end
+        end)
+    end)
   end
 
   @spec is_neighboring_piece(list, {integer, integer}, {integer, integer}) :: boolean
@@ -146,14 +182,46 @@ defmodule StrategoWeb.Services.BoardService do
     end
   end
 
-  def is_movable_piece(board, {x, y}) do
-    # can't be bomb or flag
+  defp is_movable(piece_rank) do
     ["S", "1", "2", "3", "4", "5", "6", "7", "8", "9"]
-    |> Enum.member?(get_piece_rank(board, {x, y}))
+    |> Enum.member?(piece_rank)
   end
 
-  def is_own_movable_piece(board, own_color, {x, y}) do
-    is_own_piece(board, own_color, {x, y}) && is_movable_piece(board, {x, y})
+  @spec is_movable_piece(any(), {integer(), integer()}) :: boolean()
+  def is_movable_piece(board, {x, y}) do
+    # can't be bomb or flag
+    get_piece_rank(board, {x, y}) |> is_movable()
+  end
+
+  def is_movable_piece(piece) do
+    get_rank_from_piece(piece) |> is_movable()
+  end
+
+  def is_own_movable_piece(board, player_color, {x, y}) do
+    is_own_piece(board, player_color, {x, y}) && is_movable_piece(board, {x, y})
+  end
+
+  @spec is_own_movable_piece(String.t(), atom()) :: boolean()
+  def is_own_movable_piece(piece, player_color) do
+    is_movable_piece(piece) && is_own_piece(piece, player_color)
+  end
+
+  def has_movable_piece(board, player_color) do
+    Enum.reduce(board, false, fn row, acc ->
+      acc ||
+        Enum.reduce(row, false, fn piece, row_acc ->
+          row_acc || is_own_movable_piece(piece, player_color)
+        end)
+    end)
+  end
+
+  def has_flag(board, player_color) do
+    Enum.reduce(board, false, fn row, acc ->
+      acc ||
+        Enum.reduce(row, false, fn piece, row_acc ->
+          row_acc || is_own_specific_piece(piece, player_color, "F")
+        end)
+    end)
   end
 
   def draw_attack(board, from_cell, to_cell) do

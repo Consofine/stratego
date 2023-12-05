@@ -18,6 +18,7 @@ defmodule Stratego.Application do
       {Finch, name: Stratego.Finch},
       # Start the Endpoint (http/https)
       StrategoWeb.Endpoint
+
       # Start a worker by calling: Stratego.Worker.start_link(arg)
       # {Stratego.Worker, arg}
     ]

@@ -47,7 +47,7 @@ defmodule StrategoWeb.Components.PlayerLegend do
   end
 
   def player_legend_item(%{status: status, player: player} = assigns)
-      when status == :active do
+      when status == :active or status == :completed do
     color = get_color(player.color)
     assigns = assign(assigns, %{color: color})
 
@@ -59,7 +59,9 @@ defmodule StrategoWeb.Components.PlayerLegend do
         else: "border-l-8 border-#{color}"
       )
     ]}>
-      <p class="font-medium"><%= @player.username %></p>
+      <p class={["font-medium", if(@player.status == :defeated, do: "line-through", else: "")]}>
+        <%= @player.username %>
+      </p>
     </div>
     """
   end

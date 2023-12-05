@@ -5,7 +5,7 @@ defmodule Stratego.Player do
   schema "players" do
     field(:username, :string)
     field(:color, Ecto.Enum, values: [:red, :white, :blue, :green])
-    field(:status, Ecto.Enum, values: [:not_ready, :ready])
+    field(:status, Ecto.Enum, values: [:not_ready, :ready, :defeated])
     field(:secret, :string)
     field(:index, :integer)
 

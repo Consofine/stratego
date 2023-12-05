@@ -1,8 +1,7 @@
 defmodule StrategoWeb.Services.GameService do
   alias StrategoWeb.Services.UtilsService
   alias StrategoWeb.Services.PlayerService
-  alias Stratego.Player
-  alias Stratego.{Game, Repo, Constants}
+  alias Stratego.{Player, Game, Repo, Constants}
   alias StrategoWeb.Services.{RandomService, BoardService}
   import Ecto.Query
 
@@ -68,12 +67,21 @@ defmodule StrategoWeb.Services.GameService do
     |> Repo.all()
   end
 
+  def get_remaining_players(game) do
+    from(p in Player,
+      where: p.game_id == ^game.id and p.status != :defeated,
+      select: p,
+      order_by: [asc: :inserted_at]
+    )
+    |> Repo.all()
+  end
+
   def get_active_player(game) do
     from(p in Player, where: p.id == ^game.active_player_id, select: p) |> Repo.one!()
   end
 
   def get_next_player(game) do
-    players = get_players(game)
+    players = get_remaining_players(game)
 
     active_index =
       players
@@ -131,6 +139,21 @@ defmodule StrategoWeb.Services.GameService do
     attacker == defender
   end
 
+  def is_player_defeated(board, player_color) do
+    !(BoardService.has_flag(board, player_color) &&
+        BoardService.has_movable_piece(board, player_color))
+  end
+
+  @doc """
+  Checks if the game has ended, based on there being no remaining players.
+  Theoretically the game could end in a draw if both remaining players
+  draw an attack with their final movable pieces... I'm gonna ignore that
+  for now.
+  """
+  def is_game_over(game) do
+    get_remaining_players(game) |> length() <= 1
+  end
+
   defp get_visible_pieces(_from_cell, to_cell, attacker, defender, :win) do
     if is_nil(defender) do
       []
@@ -169,14 +192,48 @@ defmodule StrategoWeb.Services.GameService do
     end
   end
 
-  def end_turn(game, board, visible_pieces \\ %{}) do
+  def update_defeated_players(game) do
+    defeated_players =
+      get_remaining_players(game)
+      |> Enum.filter(fn player ->
+        is_player_defeated(game.board, player.color)
+      end)
+
+    defeated_player_ids =
+      defeated_players
+      |> Enum.map(fn player ->
+        player.id
+      end)
+
+    from(p in Player, where: p.id in ^defeated_player_ids, select: p)
+    |> Repo.update_all(set: [status: :defeated])
+
+    defeated_players
+  end
+
+  def end_turn(game, board, visible_pieces \\ []) do
+    game =
+      Game.changeset(game, %{
+        "board" => board
+      })
+      |> Repo.update!()
+
+    defeated_players = update_defeated_players(game)
     next_player = get_next_player(game)
 
-    Game.changeset(game, %{
-      "active_player_id" => next_player.id,
-      "board" => board,
-      "visible_pieces" => visible_pieces
-    })
+    updates =
+      if is_game_over(game) do
+        %{"status" => "completed", "winner_id" => next_player.id}
+      else
+        %{"active_player_id" => next_player.id}
+      end
+      |> Map.merge(%{
+        "board" => board,
+        "visible_pieces" =>
+          visible_pieces ++ BoardService.get_losers_visible_pieces(board, defeated_players)
+      })
+
+    Game.changeset(game, updates)
     |> Repo.update!()
   end
 
