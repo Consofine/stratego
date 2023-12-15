@@ -35,7 +35,11 @@ defmodule StrategoWeb.Components.LobbyStatus do
       >
         Copy link <Heroicons.LiveView.icon name="clipboard" type="outline" class="h-4 w-4" />
       </button>
-      <input type="hidden" id="game-link" value={"https://militaire.fly.dev/join/#{@game_id}"} />
+      <input
+        type="hidden"
+        id="game-link"
+        value={"https://militaire.fly.dev/join?game_id=#{@game_id}"}
+      />
     </div>
     """
   end
