@@ -1,14 +1,20 @@
-<div class="bg-slate-800 min-h-screen font-serif">
-  <h1 class="text-5xl text-gray-100 text-center pt-4">Stratego</h1>
+<div class="bg-slate-800 min-h-screen font-serif px-2">
+  <div class="flex flex-row flex-1 justify-center items-center gap-x-3 pt-32 sm:pt-4 pb-2 sm:pb-0">
+    <h1 class="text-5xl text-gray-100 ">Stratego</h1>
+    <img src="/images/1.svg" class="filter-r w-12 sm:hidden" />
+  </div>
   <p class="text-gray-200 text-center pt-2">
     Play the classic board game in an updated online version!
   </p>
-  <div class="flex flex-row-reverse items-center justify-center space-x-8 mt-8">
+  <div class="block sm:flex sm:flex-row-reverse items-center justify-center space-x-8 mt-8">
     <div>
-      <img src="/images/1.svg" class="filter-r max-w-xs mx-auto mt-4" />
+      <img
+        src="/images/1.svg"
+        class="hidden sm:block filter-r w-32 sm:w-full max-w-xs mx-auto mt-4 mb-8 sm:mb-0"
+      />
     </div>
 
-    <div class="flex flex-row items-center space-x-6">
+    <div class="flex flex-row justify-center sm:justify-end items-center space-x-6">
       <.link navigate={~p(/join)}>
         <button class="px-3 py-2 rounded-md bg-white text-slate-800 hover:brightness-75">
           Join Game

@@ -1,4 +1,4 @@
-<div class="bg-slate-800 min-h-screen w-screen py-2">
+<div class="bg-slate-800 min-h-screen min-w-screen w-fit sm:w-full pt-2 sm:pt-4 md:pt-8">
   <div class="md:flex md:flex-row-reverse justify-center container mx-auto">
     <div class="h-fit flex flex-row flex-1 justify-center space-x-2 py-2 md:py-0 md:block">
       <StrategoWeb.Components.PlayerLegend.legend
@@ -7,23 +7,10 @@
         active_player_id={@clean_game.active_player_id}
       />
       <%= if @clean_game.status === :in_lobby do %>
-        <div class="mt-4 p-4 flex flex-col items-center">
-          <%= if Map.get(@self, :status) == :not_ready do %>
-            <h3 class="text-center text-xl font-serif text-white">Not ready</h3>
-            <button
-              type="button"
-              phx-click="ready-up"
-              class="rounded-md px-3 py-2 text-white font-bold bg-green-500 hover:bg-green-700 mt-3"
-            >
-              Ready up
-            </button>
-          <% else %>
-            <h3 class="text-center text-xl font-serif text-white">Ready</h3>
-            <div class="mx-auto p-2 max-w-xs bg-teal-500 text-center rounded-md m-2">
-              <p class="text-white">Waiting for other players</p>
-            </div>
-          <% end %>
-        </div>
+        <StrategoWeb.Components.LobbyStatus.lobby_status
+          self_status={@self.status}
+          game_id={@clean_game.uid}
+        />
       <% end %>
     </div>
     <div class="container mx-auto px-4">

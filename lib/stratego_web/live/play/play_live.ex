@@ -4,7 +4,6 @@ defmodule StrategoWeb.PlayLive do
 
   alias StrategoWeb.Services.{BoardService, GameService}
   alias Stratego.{Game, Repo, Player}
-  require Logger
   import Ecto.Query
 
   def mount(%{"uid" => uid}, %{"secret" => secret}, socket) do

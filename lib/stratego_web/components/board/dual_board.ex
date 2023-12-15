@@ -33,7 +33,7 @@ defmodule StrategoWeb.Components.DualBoard do
             <%= for {cell, x} <- Enum.with_index(row) do %>
               <div
                 style={"transform: rotate(-#{180 + (@self.index * 180)}deg)"}
-                class={"w-16 h-16 flex-0 justify-center items-center relative border border-gray-500 z-10 #{if is_starting_square(@self, {x,y}), do: "hover:brightness-90", else: ""}"}
+                class={"w-14 h-14 flex-0 justify-center items-center relative border border-gray-500 z-10 #{if is_starting_square(@self, {x,y}), do: "hover:brightness-90", else: ""}"}
               >
                 <LobbyCell.lobby_cell value={cell} x={x} y={y} selected={@selected} />
               </div>

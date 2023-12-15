@@ -100,7 +100,7 @@ defmodule StrategoWeb.Services.GameService do
   def maybe_make_move(game, own_color, from_cell, to_cell) do
     with true <- is_own_turn(game, own_color),
          true <- BoardService.is_own_movable_piece(game.board, own_color, from_cell),
-         true <- BoardService.is_neighboring_piece(game.board, from_cell, to_cell),
+         true <- BoardService.is_valid_square(game.board, from_cell, to_cell),
          true <- BoardService.is_enemy_or_empty(game.board, own_color, to_cell) do
       {new_board, visible_pieces} = make_move!(game.board, from_cell, to_cell)
       {:ok, new_board, visible_pieces}

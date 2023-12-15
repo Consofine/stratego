@@ -3,8 +3,6 @@ defmodule StrategoWeb.Services.BoardService do
   alias Stratego.Constants
   alias UtilsService
 
-  require Logger
-
   @pieces_list_duel Constants.pieces_list_duel()
   @pieces_list_quad Constants.pieces_list_quad()
   @obstacles [{2, 4}, {3, 4}, {2, 5}, {3, 5}, {6, 4}, {6, 5}, {7, 4}, {7, 5}]
@@ -168,6 +166,73 @@ defmodule StrategoWeb.Services.BoardService do
       Enum.member?([{0, 1}, {0, -1}, {1, 0}, {-1, 0}], {a - x, b - y})
   end
 
+  defp is_valid_row_jump(board, {x, y} = _from_cell, {a, b} = to_cell) do
+    cond do
+      y != b ->
+        false
+
+      max(x, a) - min(x, a) == 1 ->
+        is_enemy_or_empty(board, get_color_from_cell(board, x, y), to_cell)
+
+      true ->
+        # Don't include start cell, so add 1 from leftmost cell
+        {row_start, row_end} = if x < a, do: {x + 1, a}, else: {a + 1, x}
+
+        is_row_clear =
+          board
+          |> Enum.at(y)
+          |> Enum.slice(row_start, row_end)
+          |> Enum.filter(fn piece -> piece != nil end)
+          |> length() == 0
+
+        is_row_clear && is_enemy_or_empty(board, get_color_from_cell(board, x, y), to_cell)
+    end
+  end
+
+  defp is_valid_col_jump(board, {x, y} = _from_cell, {a, b} = to_cell) do
+    cond do
+      x != a ->
+        false
+
+      max(y, b) - min(y, b) == 1 ->
+        is_enemy_or_empty(board, get_color_from_cell(board, x, y), to_cell)
+
+      true ->
+        # Don't include start cell, so add 1 from bottom cell
+        {col_start, col_end} = if y < b, do: {y + 1, b}, else: {b + 1, y}
+
+        is_col_clear =
+          board
+          |> Enum.slice(col_start, col_end - col_start)
+          |> Enum.filter(fn row ->
+            Enum.at(row, x) != nil
+          end)
+          |> length() == 0
+
+        is_col_clear && is_enemy_or_empty(board, get_color_from_cell(board, x, y), to_cell)
+    end
+  end
+
+  @doc """
+  Checks if this move is valid for a 9. Checks if the piece is a nine, and verifies
+  the destination is in the same column or row with nothing in between it and
+  the start square and the end square. Also verifies that the end square is an empty cell or an enemy.
+  """
+  def is_valid_jump(board, {x, y} = from_cell, {a, b} = to_cell) do
+    with "9" <- get_piece_rank(board, from_cell),
+         # probs unnecessary but doesn't hurt
+         true <- from_cell != to_cell,
+         true <- x == a || y == b do
+      is_valid_col_jump(board, from_cell, to_cell) || is_valid_row_jump(board, from_cell, to_cell)
+    else
+      _ -> false
+    end
+  end
+
+  def is_valid_square(board, from_cell, to_cell) do
+    is_neighboring_piece(board, from_cell, to_cell) || is_valid_jump(board, from_cell, to_cell)
+  end
+
   def is_enemy_or_empty(board, team_color, {x, y}) do
     if get_piece(board, {x, y}) == nil do
       true
@@ -201,7 +266,6 @@ defmodule StrategoWeb.Services.BoardService do
     is_own_piece(board, player_color, {x, y}) && is_movable_piece(board, {x, y})
   end
 
-  @spec is_own_movable_piece(String.t(), atom()) :: boolean()
   def is_own_movable_piece(piece, player_color) do
     is_movable_piece(piece) && is_own_piece(piece, player_color)
   end
@@ -360,7 +424,6 @@ defmodule StrategoWeb.Services.BoardService do
   end
 
   def add_starting_pieces(board, player_number) when player_number == 0 or player_number == 1 do
-    Logger.critical("Adding player #{player_number}")
     color = Constants.colors() |> Enum.at(player_number)
 
     board
@@ -377,7 +440,6 @@ defmodule StrategoWeb.Services.BoardService do
               piece <> "-" <> color
             end)
 
-          Logger.critical("Piece: #{inspect(formatted_piece)}")
           formatted_piece
 
         _ ->
