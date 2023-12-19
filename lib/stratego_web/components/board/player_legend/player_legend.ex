@@ -69,7 +69,7 @@ defmodule StrategoWeb.Components.PlayerLegend do
   def get_color(color) do
     colors = [
       blue: "blue-500",
-      green: "green-500",
+      green: "black",
       red: "red-500",
       white: "gray-100"
     ]

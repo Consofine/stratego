@@ -7,11 +7,8 @@ defmodule StrategoWeb.Components.DualBoard do
   alias StrategoWeb.Services.{UtilsService, BoardService}
   alias StrategoWeb.Components.Cell.{LobbyCell, ActiveCell}
 
-  def is_starting_square(self, {x, y}) do
-    case self.index do
-      0 -> BoardService.is_p1_starting_square_two_player(x, y)
-      1 -> BoardService.is_p2_starting_square_two_player(x, y)
-    end
+  def is_own_piece(piece, own_color) do
+    BoardService.is_own_piece(piece, own_color)
   end
 
   def get_vp_list(visible_pieces, cell) do
@@ -33,7 +30,10 @@ defmodule StrategoWeb.Components.DualBoard do
             <%= for {cell, x} <- Enum.with_index(row) do %>
               <div
                 style={"transform: rotate(-#{180 + (@self.index * 180)}deg)"}
-                class={"w-14 h-14 flex-0 justify-center items-center relative border border-gray-500 z-10 #{if is_starting_square(@self, {x,y}), do: "hover:brightness-90", else: ""}"}
+                class={[
+                  "w-14 h-14 flex-0 justify-center items-center relative border border-gray-500 z-10",
+                  if(is_own_piece(cell, @self.color), do: "hover:brightness-90", else: "")
+                ]}
               >
                 <LobbyCell.lobby_cell value={cell} x={x} y={y} selected={@selected} />
               </div>
@@ -54,7 +54,10 @@ defmodule StrategoWeb.Components.DualBoard do
             <%= for {cell, x} <- Enum.with_index(row) do %>
               <div
                 style={"transform: rotate(-#{180 + (@self.index * 180)}deg)"}
-                class={"w-16 h-16 flex-0 justify-center items-center relative border border-gray-500 z-10 #{if is_starting_square(@self, {x,y}), do: "hover:brightness-90", else: ""}"}
+                class={[
+                  "w-16 h-16 flex-0 justify-center items-center relative border border-gray-500 z-10",
+                  if(is_own_piece(cell, @self.color), do: "hover:brightness-90", else: "")
+                ]}
               >
                 <.live_component
                   module={ActiveCell}

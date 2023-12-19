@@ -23,6 +23,8 @@ module.exports = {
     "border-blue-500",
     "border-green-500",
     "border-red-500",
+    "bg-black",
+    "border-black",
   ],
   plugins: [
     require("@tailwindcss/forms"),

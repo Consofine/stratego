@@ -59,10 +59,9 @@ defmodule StrategoWeb.PlayLive do
     player = Player.changeset(self, %{status: :ready}) |> Repo.update!()
     game = from(g in Game, where: g.id == ^game.id, select: g, preload: [:players]) |> Repo.one!()
 
-    if game.players
-       |> Enum.all?(fn player ->
+    if Enum.all?(game.players, fn player ->
          player.status == :ready
-       end) do
+       end) && length(game.players) > 1 do
       first_player =
         game.players
         |> Enum.find(fn player ->

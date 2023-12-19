@@ -181,7 +181,7 @@ defmodule StrategoWeb.Services.BoardService do
         is_row_clear =
           board
           |> Enum.at(y)
-          |> Enum.slice(row_start, row_end)
+          |> Enum.slice(row_start, row_end - row_start)
           |> Enum.filter(fn piece -> piece != nil end)
           |> length() == 0
 
@@ -338,10 +338,6 @@ defmodule StrategoWeb.Services.BoardService do
     x >= 4 && x <= 10 && y <= 2
   end
 
-  def is_p1_starting_square_two_player(_x, y) do
-    y < 4
-  end
-
   def get_p1_piece(x, y) do
     piece = Enum.at(@pieces_list_quad, y) |> Enum.at(x - 4)
     color = Enum.at(@colors, 0)
@@ -350,10 +346,6 @@ defmodule StrategoWeb.Services.BoardService do
 
   def is_p2_starting_square_four_player(x, y) do
     x >= 12 && y >= 4 && y <= 10
-  end
-
-  def is_p2_starting_square_two_player(_x, y) do
-    y >= 6
   end
 
   def get_p2_piece(x, y) do

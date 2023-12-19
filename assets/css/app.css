@@ -9,7 +9,7 @@
 }
 
 .filter-g {
-    filter: invert(77%) sepia(1%) saturate(63%) hue-rotate(314deg) brightness(85%) contrast(87%);
+    filter: brightness(0) saturate(100%) invert(0%) sepia(0%) saturate(0%) hue-rotate(98deg) brightness(97%) contrast(103%);
 }
 
 .filter-r {
