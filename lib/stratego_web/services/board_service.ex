@@ -38,6 +38,15 @@ defmodule StrategoWeb.Services.BoardService do
     end
   end
 
+  def string_to_atom_color!(color) do
+    case color do
+      "r" -> :red
+      "b" -> :blue
+      "g" -> :green
+      "w" -> :white
+    end
+  end
+
   def string_to_atom_color(color) do
     case color do
       "r" -> {:ok, :red}
@@ -92,6 +101,10 @@ defmodule StrategoWeb.Services.BoardService do
 
   def get_color_from_piece!(piece, :string) do
     piece |> String.split("-") |> List.last()
+  end
+
+  def get_color_from_piece!(piece, :atom) do
+    piece |> String.split("-") |> List.last() |> string_to_atom_color!()
   end
 
   def get_color_from_cell(board, x, y) do
@@ -332,6 +345,18 @@ defmodule StrategoWeb.Services.BoardService do
     second_piece = get_piece(board, {a, b})
     board = set_piece(board, {x, y}, second_piece)
     set_piece(board, {a, b}, first_piece)
+  end
+
+  def remove_pieces_for_colors(board, colors) do
+    Enum.map(board, fn row ->
+      Enum.map(row, fn piece ->
+        if get_rank_from_piece(piece) != nil and get_color_from_piece!(piece, :atom) in colors do
+          nil
+        else
+          piece
+        end
+      end)
+    end)
   end
 
   def is_p1_starting_square_four_player(x, y) do

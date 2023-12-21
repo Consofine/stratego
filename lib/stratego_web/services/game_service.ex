@@ -211,6 +211,17 @@ defmodule StrategoWeb.Services.GameService do
     defeated_players
   end
 
+  defp remove_defeated_pieces(board, defeated_players) do
+    if length(defeated_players) > 0 do
+      BoardService.remove_pieces_for_colors(
+        board,
+        defeated_players |> Enum.map(fn player -> player.color end)
+      )
+    else
+      board
+    end
+  end
+
   def end_turn(game, board, visible_pieces \\ []) do
     game =
       Game.changeset(game, %{
@@ -228,7 +239,7 @@ defmodule StrategoWeb.Services.GameService do
         %{"active_player_id" => next_player.id}
       end
       |> Map.merge(%{
-        "board" => board,
+        "board" => remove_defeated_pieces(game.board, defeated_players),
         "visible_pieces" =>
           visible_pieces ++ BoardService.get_losers_visible_pieces(board, defeated_players)
       })
