@@ -1,8 +1,6 @@
 defmodule StrategoWeb.Components.PlayerLegend do
   use Phoenix.Component
 
-  require Logger
-
   attr(:players, :list, required: true)
   attr(:status, :atom, required: true)
   attr(:active_player_id, :integer, required: true)
