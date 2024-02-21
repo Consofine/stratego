@@ -5,7 +5,7 @@ defmodule ConsWeb.Components.Ui.Footer do
     ~H"""
     <div class="py-2 flex flex-col flex-1 items-center text-sm bg-gray-100">
       <div>
-        <p>Built by <a href="https://michaelconsidine.com">Mike Considine</a></p>
+        <p>Built by Mike Considine</p>
       </div>
       <div>
         <p>

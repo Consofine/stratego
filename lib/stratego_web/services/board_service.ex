@@ -156,8 +156,8 @@ defmodule StrategoWeb.Services.BoardService do
     end)
   end
 
-  def get_losers_visible_pieces(board, losers) do
-    colors = losers |> Enum.map(fn player -> player.color end)
+  def get_players_visible_pieces(board, players) do
+    colors = players |> Enum.map(fn player -> player.color end)
 
     index_board(board)
     |> Enum.reduce([], fn {row, y}, acc ->

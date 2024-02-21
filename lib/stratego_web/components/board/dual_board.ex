@@ -23,7 +23,7 @@ defmodule StrategoWeb.Components.DualBoard do
 
   def render(%{game: game} = assigns) when game.status == :in_lobby do
     ~H"""
-    <div>
+    <div class="min-w-screen w-full">
       <div style={"transform: rotate(#{180 + (@self.index * 180)}deg)"}>
         <%= for {row, y} <- Enum.with_index(@game.board) do %>
           <div class="flex flex-row max-w-full">
@@ -56,7 +56,13 @@ defmodule StrategoWeb.Components.DualBoard do
                 style={"transform: rotate(-#{180 + (@self.index * 180)}deg)"}
                 class={[
                   "w-16 h-16 flex-0 justify-center items-center relative border border-gray-500 z-10",
-                  if(is_own_piece(cell, @self.color), do: "hover:brightness-90", else: "")
+                  if(is_own_piece(cell, @self.color), do: "hover:brightness-90", else: ""),
+                  if(
+                    @game.last_move_coords &&
+                      UtilsService.parse_coordinates_string!(@game.last_move_coords) == {x, y},
+                    do: "brightness-75",
+                    else: ""
+                  )
                 ]}
               >
                 <.live_component
