@@ -138,7 +138,7 @@ defmodule StrategoWeb.PlayLive do
     with {:ok, {x, y}} <- UtilsService.parse_coordinates_string(coords) do
       case GameService.maybe_make_move(game, own_color, selected, {x, y}) do
         {:ok, new_board, visible_pieces} ->
-          game = GameService.end_turn(game, new_board, visible_pieces)
+          game = GameService.end_turn(game, new_board, {x, y}, visible_pieces)
 
           StrategoWeb.Endpoint.broadcast_from(self(), "game/#{game.uid}", "made_move", %{
             game: game

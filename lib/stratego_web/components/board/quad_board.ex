@@ -61,7 +61,13 @@ defmodule StrategoWeb.Components.QuadBoard do
                 style={"transform: rotate(-#{180 - (@self.index  * 90)}deg)"}
                 class={[
                   "w-16 h-16 flex-0 justify-center items-center relative border border-gray-500 z-10",
-                  if(is_own_piece(cell, @self.color), do: "hover:brightness-90", else: "")
+                  if(is_own_piece(cell, @self.color), do: "hover:brightness-75", else: ""),
+                  if(
+                    @game[:last_move_coords] &&
+                      UtilsService.parse_coordinates_string!(@game.last_move_coords) == {x, y},
+                    do: "brightness-90",
+                    else: ""
+                  )
                 ]}
               >
                 <.live_component

@@ -112,19 +112,28 @@ defmodule StrategoWeb.Services.GameService do
 
   def is_stronger_than(attacker, defender) do
     cond do
+      # open space - go ahead
       defender == nil ->
         true
 
-      attacker == "S" && defender == "1" ->
+      # ties are false (handled elsewhere)
+      attacker == defender ->
+        false
+
+      # spy kills ones but wins no other attacks
+      attacker == "S" ->
+        defender == "1"
+
+      # when attacked, spy always loses (ties already handled above)
+      defender == "S" ->
         true
 
+      # 8 kills bombs
       attacker == "8" && defender == "B" ->
         true
 
+      # flag can be captured by anyone
       defender == "F" ->
-        true
-
-      defender == "S" ->
         true
 
       defender == "B" ->
@@ -211,18 +220,18 @@ defmodule StrategoWeb.Services.GameService do
     defeated_players
   end
 
-  defp remove_defeated_pieces(board, defeated_players) do
-    if length(defeated_players) > 0 do
+  defp remove_pieces_for_players(board, players) do
+    if length(players) > 0 do
       BoardService.remove_pieces_for_colors(
         board,
-        defeated_players |> Enum.map(fn player -> player.color end)
+        players |> Enum.map(fn player -> player.color end)
       )
     else
       board
     end
   end
 
-  def end_turn(game, board, visible_pieces \\ []) do
+  def end_turn(game, board, last_move_coords, visible_pieces \\ []) do
     game =
       Game.changeset(game, %{
         "board" => board
@@ -232,17 +241,28 @@ defmodule StrategoWeb.Services.GameService do
     defeated_players = update_defeated_players(game)
     next_player = get_next_player(game)
 
-    updates =
-      if is_game_over(game) do
+    is_game_over = is_game_over(game)
+
+    status_updates =
+      if is_game_over do
         %{"status" => "completed", "winner_id" => next_player.id}
       else
         %{"active_player_id" => next_player.id}
       end
-      |> Map.merge(%{
-        "board" => remove_defeated_pieces(game.board, defeated_players),
-        "visible_pieces" =>
-          visible_pieces ++ BoardService.get_losers_visible_pieces(board, defeated_players)
-      })
+
+    players_to_reveal =
+      if is_game_over, do: defeated_players ++ [next_player], else: defeated_players
+
+    updates =
+      Map.merge(
+        status_updates,
+        %{
+          "board" => remove_pieces_for_players(game.board, players_to_reveal),
+          "visible_pieces" =>
+            visible_pieces ++ BoardService.get_players_visible_pieces(board, players_to_reveal),
+          "last_move_coords" => UtilsService.coords_to_string(last_move_coords)
+        }
+      )
 
     Game.changeset(game, updates)
     |> Repo.update!()

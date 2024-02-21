@@ -15,6 +15,14 @@ defmodule StrategoWeb.Services.UtilsService do
     end
   end
 
+  def parse_coordinates_string!(coords) do
+    with coordinates <- String.split(coords, ","),
+         {x, ""} <- Integer.parse(coordinates |> List.first()),
+         {y, ""} <- Integer.parse(coordinates |> List.last()) do
+      {x, y}
+    end
+  end
+
   def coords_to_string({x, y}) do
     "#{x},#{y}"
   end
